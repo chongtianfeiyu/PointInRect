@@ -3,12 +3,15 @@ package
 	import flash.display.Graphics;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.ui.Mouse;
+
 	[SWF(width="999",height="666")]
 	public class PointInRect extends Sprite
 	{
-
+		private var offx:int = 44;
+		private var offy:int = 33;
 		public function PointInRect()
 		{
 			//坐标系
@@ -34,23 +37,23 @@ package
 			//矩形
 			w = 100;
 			h = 50;
-			p1 = new Point(0,0);
-			p2 = new Point(w,0);
-			p3 = new Point(w,h);
-			p4 = new Point(0,h);
+			p1 = new Point(0,h*-0.5);
+			p2 = new Point(w,h*-0.5);
+			p3 = new Point(w,h*0.5);
+			p4 = new Point(0,h*0.5);
 			
 			//旋转
-			var du:Number = 60*MathConsts.DEGREES_TO_RADIANS;
+			var du:Number = 210*MathConsts.DEGREES_TO_RADIANS;
 			
 			p1 = GameMathUtil.rot(p1,du);
 			p2 = GameMathUtil.rot(p2,du);
 			p3 = GameMathUtil.rot(p3,du);
 			p4 = GameMathUtil.rot(p4,du);
 			
-			offset(p1,40,33);
-			offset(p2,40,33);
-			offset(p3,40,33);
-			offset(p4,40,33);
+			offset(p1,offx,offy);
+			offset(p2,offx,offy);
+			offset(p3,offx,offy);
+			offset(p4,offx,offy);
 			
 			//求中心线段
 			m1 = Point.interpolate(p1,p4,0.5);
@@ -113,14 +116,49 @@ package
 			yuan.x = local.x;
 			yuan.y = local.y;
 			
-			//判断点是否在矩形内
-			var d1:Number = point2Line(yuan.pos,m1,m2);
-			var d2:Number = point2Line(yuan.pos,n1,n2);
-			if(d2<w*0.5 && d1<h*0.5){
-				if(yuan.color!=0x990000)yuan.change(0x990000,6);
+			var inSide:Boolean = pointInRect(w,h,210,offx,offy,yuan.pos);
+			if(inSide){
+				if(yuan.color!=0x990000){
+					yuan.change(0x990000,6);
+				}
 			}else{
-				if(yuan.color!=0x009900)yuan.change(0x009900,3);
+				if(yuan.color!=0x009900){
+					yuan.change(0x009900,3);
+				}
 			}
+		}
+		private function pointInRect(w:int, h:int, angle:Number, myX:int, myY:int, targetPos:Point):Boolean
+		{
+			p1 = new Point(0,h*-0.5);
+			p2 = new Point(w,h*-0.5);
+			p3 = new Point(w,h*0.5);
+			p4 = new Point(0,h*0.5);
+			//旋转
+			var du:Number = angle*MathConsts.DEGREES_TO_RADIANS;
+			
+			p1 = GameMathUtil.rot(p1,du);
+			p2 = GameMathUtil.rot(p2,du);
+			p3 = GameMathUtil.rot(p3,du);
+			p4 = GameMathUtil.rot(p4,du);
+			
+			offset(p1,myX,myY);
+			offset(p2,myX,myY);
+			offset(p3,myX,myY);
+			offset(p4,myX,myY);
+			
+			//求中心线段
+			m1 = Point.interpolate(p1,p4,0.5);
+			m2 = Point.interpolate(p2,p3,0.5);
+			n1 = Point.interpolate(p1,p2,0.5);
+			n2 = Point.interpolate(p4,p3,0.5);
+			
+			//判断点是否在矩形内
+			var d1:Number = point2Line(targetPos,m1,m2);
+			var d2:Number = point2Line(targetPos,n1,n2);
+			if(d2<w*0.5 && d1<h*0.5){
+				return true;
+			}
+			return false;
 		}
 		/**
 		 * 点到直接线的距离
